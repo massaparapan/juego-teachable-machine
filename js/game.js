@@ -18,15 +18,20 @@ function setup() {
 
   textFont('Courier New');
 
-  // ── Cámara ──────────────────────────────────────────────
-  // createCapture(VIDEO) activa la cámara del usuario.
-  // La ocultamos del DOM porque la dibujamos en p5.
-  captura = createCapture(VIDEO, () => {
-    console.log('✅ Cámara lista');
-    cargarModelo(); // arrancamos el modelo cuando la cámara está lista
-  });
-  captura.size(224, 224); // tamaño esperado por Teachable Machine
-  captura.hide();
+  // ── Cámara / Modelo ─────────────────────────────────────
+  if (MODO_PRUEBA) {
+    // Sin cámara ni modelo: el jetpack se controla con la barra espaciadora
+    console.log('🕹️  MODO PRUEBA activado – mantén ESPACIO para volar');
+  } else {
+    // createCapture(VIDEO) activa la cámara del usuario.
+    // La ocultamos del DOM porque la dibujamos en p5.
+    captura = createCapture(VIDEO, () => {
+      console.log('✅ Cámara lista');
+      cargarModelo(); // arrancamos el modelo cuando la cámara está lista
+    });
+    captura.size(224, 224); // tamaño esperado por Teachable Machine
+    captura.hide();
+  }
 
   // ── Fondo Parallax ──────────────────────────────────────
   inicializarParallax();
@@ -71,11 +76,11 @@ function draw() {
 // ============================================================
 function actualizarJuego() {
 
-  // ── Interpretar etiqueta del modelo ─────────────────────
-  if (modeloCargado && confianzaActual > 0.6) {
-    if (etiquetaActual === 'Abierta') {
-      jugador.volar();
-    }
+  // ── Control de vuelo (modo prueba ↔ Teachable Machine) ──
+  if (MODO_PRUEBA) {
+    if (teclaPulsada) jugador.volar(); // volar mientras Espacio esté presionado
+  } else if (modeloCargado && confianzaActual > 0.6) {
+    if (etiquetaActual === 'Abierta') jugador.volar();
     // 'Cerrada' o cualquier otra → cae por gravedad
   }
 
@@ -145,13 +150,13 @@ function activarGameOver() {
 }
 
 function reiniciar() {
-  puntaje    = 0;
+  puntaje = 0;
   obstaculos = [];
-  monedas    = [];
+  monedas = [];
   particulas = [];
-  jugador    = new Player(120, ALTO / 2);
+  jugador = new Player(120, ALTO / 2);
   frameInicio = frameCount;
-  estado     = 'jugando';
+  estado = 'jugando';
   inicializarParallax();
 }
 
@@ -163,12 +168,19 @@ function keyPressed() {
   if (key === 'r' || key === 'R') {
     reiniciar();
   }
-  // Espacio → control manual de respaldo (para pruebas sin modelo)
+  // Espacio → jetpack
   if (key === ' ') {
-    if (estado === 'jugando') jugador.volar();
+    if (MODO_PRUEBA) {
+      teclaPulsada = true;  // modo prueba: vuelo continuo mientras esté presionado
+    } else {
+      if (estado === 'jugando') jugador.volar(); // modo ML: impulso manual de respaldo
+    }
   }
 }
 
 function keyReleased() {
-  // Extensible: agregar lógica al soltar teclas si es necesario
+  // Modo prueba: al soltar Espacio se corta el jetpack (análogo a cerrar la mano)
+  if (key === ' ') {
+    teclaPulsada = false;
+  }
 }

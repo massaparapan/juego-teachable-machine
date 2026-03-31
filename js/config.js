@@ -1,4 +1,15 @@
 // ============================================================
+//  MODO DE PRUEBA
+//  true  → teclado: ESPACIO mantenido = jetpack. Sin cámara ni modelo.
+//  false → Teachable Machine (comportamiento normal de juego).
+//  ➡  Cambia solo esta línea para alternar entre modos.
+// ============================================================
+const MODO_PRUEBA = true;
+
+// Indica si el jugador mantiene Espacio presionado (solo en modo prueba)
+let teclaPulsada = false;
+
+// ============================================================
 //  CONFIGURACIÓN DEL MODELO DE TEACHABLE MACHINE
 //  ➡  Reemplaza la URL con el enlace de tu modelo exportado
 //     desde teachablemachine.withgoogle.com
@@ -13,13 +24,13 @@ let imageModelURL = 'TU_LINK_AQUI/';
 
 // Dimensiones del canvas
 const ANCHO = 900;
-const ALTO  = 500;
+const ALTO = 500;
 
 // Física – se pueden ajustar para cambiar la sensación del juego
-const GRAVEDAD       = 0.5;   // Aceleración gravitacional (px/frame²)
+const GRAVEDAD = 0.5;   // Aceleración gravitacional (px/frame²)
 const FUERZA_JETPACK = 0.9;   // Fuerza opuesta a la gravedad al volar
-const VEL_MAXIMA     = 8;     // Velocidad vertical máxima (caps de caída)
-const VEL_MUNDO      = 4;     // Velocidad horizontal del mundo (obstáculos)
+const VEL_MAXIMA = 8;     // Velocidad vertical máxima (caps de caída)
+const VEL_MUNDO = 4;     // Velocidad horizontal del mundo (obstáculos)
 
 // Suelo y techo (márgenes internos del canvas)
 const SUELO = ALTO - 40;
@@ -27,7 +38,7 @@ const TECHO = 40;
 
 // Intervalo de aparición de obstáculos y monedas (en frames)
 const INTERVALO_OBSTACULO = 90;
-const INTERVALO_MONEDA    = 60;
+const INTERVALO_MONEDA = 60;
 
 // ============================================================
 //  VARIABLES DE ESTADO GLOBALES
@@ -35,15 +46,15 @@ const INTERVALO_MONEDA    = 60;
 // ============================================================
 
 // Estado del juego: 'esperando' | 'jugando' | 'gameOver'
-let estado     = 'esperando';
-let puntaje    = 0;
+let estado = 'esperando';
+let puntaje = 0;
 let frameInicio = 0; // frame en que comenzó la partida (para distancia)
 
 // Objetos del mundo
 let jugador;
 let obstaculos = [];
-let monedas    = [];
-let capas      = []; // capas del parallax de fondo
+let monedas = [];
+let capas = []; // capas del parallax de fondo
 
 // Partículas del jetpack (efecto visual)
 let particulas = [];

@@ -110,6 +110,11 @@ function dibujarHUD() {
 
   fill(100, 200, 255);
   text(`📏 ${distancia}m`, ANCHO - 150, 44);
+
+  // Badge de modo activo (esquina superior izquierda)
+  textSize(13);
+  fill(MODO_PRUEBA ? color(255, 210, 0) : color(0, 255, 150));
+  text(MODO_PRUEBA ? '🕹️ PRUEBA (ESPACIO)' : '🤖 TEACHABLE ML', 16, 16);
 }
 
 // ── VISOR DE CÁMARA (esquina inferior derecha, espejo) ──────
@@ -197,6 +202,13 @@ function mostrarCarga() {
     textSize(18);
     fill(100, 255, 200);
     text('Presiona INICIAR JUEGO', ANCHO / 2, ALTO / 2);
+    return;
+  }
+
+  if (MODO_PRUEBA) {
+    // Sin modelo que esperar → arrancar de inmediato
+    estado = 'jugando';
+    frameInicio = frameCount;
     return;
   }
 
