@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jetpack Control – Endless Runner con ML5</title>
+  <meta name="description" content="Prototipo de endless runner estilo Jetpack Joyride controlado con la cámara usando Teachable Machine y ml5.js" />
+
+  <!-- ================================================
+       LIBRERÍAS EXTERNAS
+       p5.js  → motor de dibujo y matemáticas
+       ml5.js → clasificador de imágenes (Teachable Machine)
+       Usamos versiones CDN. ml5 v0.12.2 es compatible con imageClassifier.
+  ================================================ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+
+  <!-- ESTILOS -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+
+<!-- PANEL DE BIENVENIDA -->
+<div id="instrucciones">
+  <h1>⚡ JETPACK CTRL ⚡</h1>
+  <p>
+    Controla al personaje con tu <strong>mano frente a la cámara</strong>.<br><br>
+    🖐️ <strong>Mano ABIERTA</strong> → Jetpack activado (sube)<br>
+    ✊ <strong>Mano CERRADA</strong> → Jetpack apagado (cae)<br><br>
+    Esquiva los obstáculos y recolecta monedas.
+  </p>
+  <div class="etiqueta">Se necesita permiso de cámara para jugar</div>
+  <button id="btn-iniciar" onclick="iniciarJuego()">▶ INICIAR JUEGO</button>
+</div>
+
+<!-- ================================================
+     SCRIPTS DEL JUEGO
+     Orden de carga (dependencias primero):
+       1. config.js       → constantes y estado global
+       2. ml5-handler.js  → cámara y modelo ML
+       3. Entidades        → Player, Obstacle, Coin, Particle
+       4. physics.js      → colisiones
+       5. rendering.js    → funciones de dibujo
+       6. game.js         → setup(), draw(), game loop
+================================================ -->
+<script src="js/config.js"></script>
+<script src="js/ml5-handler.js"></script>
+<script src="js/entities/Particle.js"></script>
+<script src="js/entities/Player.js"></script>
+<script src="js/entities/Obstacle.js"></script>
+<script src="js/entities/Coin.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/rendering.js"></script>
+<script src="js/game.js"></script>
+
+</body>
+</html>

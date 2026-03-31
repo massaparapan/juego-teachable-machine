@@ -1,0 +1,218 @@
+// ============================================================
+//  RENDERIZADO – Parallax, Ambiente, HUD, Cámara, UI
+//  Todas las funciones de dibujo que no pertenecen a entidades.
+// ============================================================
+
+// ── FONDO PARALLAX ──────────────────────────────────────────
+// Cada "capa" tiene rectángulos que se mueven a diferentes
+// velocidades para simular profundidad.
+// Capas más lejanas → más lentas y oscuras.
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Inicializa las 3 capas del parallax con objetos de fondo.
+ */
+function inicializarParallax() {
+  capas = [
+    // Capa 0 – lejana (estrellas/puntos)
+    { velocidad: 0.3, objetos: crearObjetosBack(40, 2, 4,  [20, 20, 60]) },
+    // Capa 1 – media (estructuras lejanas)
+    { velocidad: 1.2, objetos: crearObjetosBack(15, 30, 60, [10, 20, 50]) },
+    // Capa 2 – cercana (estructuras frontales)
+    { velocidad: 2.5, objetos: crearObjetosBack(8,  50, 100, [0, 30, 70]) }
+  ];
+}
+
+/**
+ * Crea objetos de fondo con posiciones aleatorias.
+ * @param {number} cantidad - cuántos objetos crear
+ * @param {number} minH     - altura mínima del objeto
+ * @param {number} maxH     - altura máxima del objeto
+ * @param {number[]} col    - color RGB base [r, g, b]
+ */
+function crearObjetosBack(cantidad, minH, maxH, col) {
+  let lista = [];
+  for (let i = 0; i < cantidad; i++) {
+    lista.push({
+      x: random(ANCHO),
+      y: random(TECHO, SUELO - maxH),
+      w: random(10, 40),
+      h: random(minH, maxH),
+      col: col
+    });
+  }
+  return lista;
+}
+
+/**
+ * Dibuja y mueve todas las capas del parallax.
+ */
+function dibujarParallax() {
+  for (let capa of capas) {
+    for (let obj of capa.objetos) {
+      obj.x -= capa.velocidad;
+
+      // Reaparece por la derecha al salir por la izquierda
+      if (obj.x + obj.w < 0) {
+        obj.x = ANCHO + random(50);
+        obj.y = random(TECHO, SUELO - obj.h);
+      }
+
+      noStroke();
+      fill(obj.col[0], obj.col[1], obj.col[2], 140);
+      rect(obj.x, obj.y, obj.w, obj.h, 2);
+    }
+  }
+}
+
+// ── AMBIENTE (suelo, techo, líneas neón) ────────────────────
+
+function dibujarAmbiente() {
+  // Suelo
+  fill(20, 40, 80);
+  noStroke();
+  rect(0, SUELO, ANCHO, ALTO - SUELO);
+
+  // Línea neón del suelo
+  stroke(0, 180, 255);
+  strokeWeight(2);
+  line(0, SUELO, ANCHO, SUELO);
+
+  // Techo
+  fill(10, 20, 50);
+  noStroke();
+  rect(0, 0, ANCHO, TECHO);
+
+  // Línea neón del techo
+  stroke(0, 180, 255, 180);
+  strokeWeight(1);
+  line(0, TECHO, ANCHO, TECHO);
+}
+
+// ── HUD (Heads Up Display – puntaje y distancia) ────────────
+
+function dibujarHUD() {
+  let distancia = floor((frameCount - frameInicio) / 30);
+
+  textAlign(LEFT, TOP);
+  noStroke();
+
+  // Sombra para legibilidad
+  fill(0, 0, 0, 120);
+  textSize(20);
+  text(`⭐ ${puntaje}`, ANCHO - 148, 18);
+  text(`📏 ${distancia}m`,  ANCHO - 148, 45);
+
+  // Texto principal
+  fill(255, 230, 50);
+  textSize(20);
+  text(`⭐ ${puntaje}`, ANCHO - 150, 16);
+
+  fill(100, 200, 255);
+  text(`📏 ${distancia}m`, ANCHO - 150, 44);
+}
+
+// ── VISOR DE CÁMARA (esquina inferior derecha, espejo) ──────
+
+function mostrarCamara() {
+  if (!captura) return;
+
+  const CW = 180; // ancho del visor
+  const CH = 135; // alto del visor
+  const PX = ANCHO - CW - 16;
+  const PY = ALTO  - CH - 50;
+
+  // Marco decorativo
+  stroke(0, 255, 200);
+  strokeWeight(2);
+  noFill();
+  rect(PX - 2, PY - 2, CW + 4, CH + 4, 6);
+
+  // Efecto espejo: translate + scale(-1,1) invierte el eje X
+  push();
+  translate(PX + CW, PY);
+  scale(-1, 1);
+  image(captura, 0, 0, CW, CH);
+  pop();
+
+  // Etiqueta de debug – estado del modelo
+  noStroke();
+  fill(0, 0, 0, 150);
+  rect(PX - 2, PY + CH + 2, CW + 4, 42, 4);
+
+  textAlign(CENTER, TOP);
+  textSize(13);
+  fill(0, 255, 150);
+  text(`🤖 ${etiquetaActual}`, PX + CW / 2, PY + CH + 6);
+
+  textSize(11);
+  fill(180, 180, 255);
+  let porcentaje = nf(confianzaActual * 100, 1, 1);
+  text(`Confianza: ${porcentaje}%`, PX + CW / 2, PY + CH + 24);
+}
+
+// ── PANTALLA DE GAME OVER ───────────────────────────────────
+
+function mostrarGameOver() {
+  // Mundo congelado
+  jugador.show();
+  for (let o of obstaculos) o.show();
+  for (let m of monedas)    m.show();
+
+  // Overlay semitransparente
+  fill(0, 0, 0, 160);
+  noStroke();
+  rect(0, 0, ANCHO, ALTO);
+
+  // Texto neón
+  textAlign(CENTER, CENTER);
+
+  // Sombra
+  fill(255, 0, 60, 100);
+  textSize(72);
+  text('GAME OVER', ANCHO / 2 + 3, ALTO / 2 - 50 + 3);
+
+  // Texto principal
+  fill(255, 60, 100);
+  textSize(72);
+  text('GAME OVER', ANCHO / 2, ALTO / 2 - 50);
+
+  // Puntaje
+  textSize(22);
+  fill(255, 220, 100);
+  text(`Puntaje: ${puntaje}`, ANCHO / 2, ALTO / 2 + 20);
+
+  // Instrucción de reinicio
+  textSize(16);
+  fill(180, 180, 255);
+  text('Presiona R para reiniciar', ANCHO / 2, ALTO / 2 + 60);
+}
+
+// ── PANTALLA DE CARGA (mientras el modelo carga) ────────────
+
+function mostrarCarga() {
+  textAlign(CENTER, CENTER);
+
+  if (!juegoIniciado) {
+    textSize(18);
+    fill(100, 255, 200);
+    text('Presiona INICIAR JUEGO', ANCHO / 2, ALTO / 2);
+    return;
+  }
+
+  if (!modeloCargado) {
+    // Animación de puntos
+    let puntos = '.'.repeat((frameCount % 60 < 20) ? 1 : (frameCount % 60 < 40) ? 2 : 3);
+    textSize(20);
+    fill(100, 220, 255);
+    text(`Cargando modelo${puntos}`, ANCHO / 2, ALTO / 2 - 20);
+
+    textSize(14);
+    fill(160, 160, 200);
+    text('(se necesita conexión a internet y la URL del modelo)', ANCHO / 2, ALTO / 2 + 20);
+  } else {
+    // Modelo listo → iniciar
+    estado      = 'jugando';
+    frameInicio = frameCount;
+  }
+}

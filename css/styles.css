@@ -1,0 +1,93 @@
+/* ================================================
+   ESTILOS GLOBALES
+   Fondo negro total, sin márgenes, fuente pixelada
+================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* El canvas de p5.js se centra automáticamente */
+canvas {
+  display: block;
+}
+
+/* ================================================
+   PANEL DE INSTRUCCIONES
+   Overlay de bienvenida (se oculta al iniciar)
+================================================ */
+#instrucciones {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.88);
+  color: #00ffcc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  z-index: 10;
+  text-align: center;
+  padding: 24px;
+}
+
+#instrucciones h1 {
+  font-size: 2.4rem;
+  color: #ff00aa;
+  text-shadow: 0 0 20px #ff00aa;
+  letter-spacing: 4px;
+}
+
+#instrucciones p {
+  font-size: 1rem;
+  max-width: 520px;
+  line-height: 1.7;
+  color: #aaffee;
+}
+
+#instrucciones .etiqueta {
+  background: #ff00aa22;
+  border: 1px solid #ff00aa;
+  border-radius: 8px;
+  padding: 8px 20px;
+  color: #ff00aa;
+  font-size: 0.9rem;
+}
+
+/* ================================================
+   BOTÓN INICIAR
+================================================ */
+#btn-iniciar {
+  margin-top: 12px;
+  padding: 14px 40px;
+  background: linear-gradient(135deg, #ff00aa, #7700ff);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  box-shadow: 0 0 24px #ff00aaaa;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+#btn-iniciar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px #ff00aa;
+}
+
+#instrucciones.oculto {
+  display: none;
+}
