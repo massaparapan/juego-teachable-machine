@@ -1,78 +1,154 @@
-# ⚡ Jetpack Control - Endless Runner con Machine Learning
+# ⚡ Jetpack Control — Endless Runner con Machine Learning
 
-Un prototipo de **endless runner** al estilo *Jetpack Joyride*, en donde controlas a tu personaje utilizando tu cámara web y un modelo de inteligencia artificial entrenado mediante **Teachable Machine**.
+Un **endless runner** al estilo *Jetpack Joyride* donde controlás al personaje con tu **cámara web** y un modelo de **Inteligencia Artificial** entrenado con Teachable Machine.
 
-Cuando abres la mano frente a la cámara, el jetpack se activa y el personaje sube. Cuando cierras la mano, el jetpack se apaga y el personaje cae.
+- 🖐️ **Mano abierta** → Jetpack activado (el personaje sube)
+- ✊ **Mano cerrada** → Jetpack apagado (el personaje cae)
+
+Esquivá obstáculos, recolectá monedas y sobreviví el mayor tiempo posible.
 
 ---
 
-## 🏗️ Arquitectura de la Aplicación (Código Limpio)
+## 🚀 Cómo ejecutar el juego
 
-El proyecto está diseñado bajo principios de código limpio, separando claramente las responsabilidades en distintos archivos para facilitar el mantenimiento y la escalabilidad de cada componente.
+### Opción A — Abrir directamente (más sencillo)
+1. Cloná o descargá este repositorio.
+2. Abrí el archivo `index.html` directamente en tu navegador (doble clic).
+3. Otorgá permiso de cámara cuando el navegador lo solicite.
+4. Presioná **▶ INICIAR JUEGO**.
 
-La estructura de directorios principal es la siguiente:
+> **Nota:** El juego requiere conexión a internet para cargar las librerías externas (p5.js y ml5.js) desde CDN.
+
+### Opción B — Servidor local (recomendado para desarrollo)
+```bash
+# Python 3
+python3 -m http.server 8080
+# Luego abrí http://localhost:8080 en el navegador
+```
+
+---
+
+## 🕹️ Controles
+
+| Acción | Control |
+|--------|---------|
+| Activar jetpack | Mano abierta frente a la cámara |
+| Desactivar jetpack | Mano cerrada frente a la cámara |
+| Reiniciar partida | Tecla `R` |
+| Jetpack (fallback teclado) | `Espacio` *(modo ML)* |
+
+### Modo Prueba (sin cámara)
+En `js/config.js` cambiá:
+```javascript
+const MODO_PRUEBA = true;
+```
+Esto te permite jugar manteniendo presionada la barra **espaciadora**, sin necesitar cámara ni modelo de IA. Ideal para desarrollo.
+
+---
+
+## 📁 Arquitectura de archivos
 
 ```text
 /
-├── index.html              # Punto de entrada de la app
+├── index.html                # Punto de entrada — carga librerías y scripts
 ├── css/
-│   └── styles.css          # Estilos visuales compartidos y UI
+│   └── styles.css            # Estilos de UI (pantalla de inicio, HUD)
+├── assets/
+│   ├── bg_far.png            # Capas de fondo parallax (lejos → cerca)
+│   ├── bg_mid.png
+│   ├── bg_near_floor.png
+│   ├── bg_near_up.png
+│   ├── coins.png             # Spritesheet de monedas
+│   ├── fly.png               # Spritesheet del personaje volando
+│   ├── walking.png           # Spritesheet del personaje caminando
+│   ├── laser.png             # Sprite del zapper (obstáculo)
+│   ├── missile_0..3.png      # Frames del misil animado (obstáculo)
+│   └── sounds/               # Efectos de sonido y música
+│       ├── music_background.wav      # Música de fondo en loop
+│       ├── jetpack_plain_start.wav   # Arranque del jetpack
+│       ├── jetpack_plain_lp.wav      # Loop del jetpack activo
+│       ├── jetpack_plain_stop.wav    # Apagado del jetpack
+│       ├── coin_pickup_1/2/3.wav     # Recolección de moneda (aleatorio)
+│       ├── laser_warning.wav         # Aviso de zapper
+│       ├── missile_warning.wav       # Aviso de misil
+│       ├── player_hurt_1.wav         # Game Over
+│       ├── ui_select.wav             # Selección de UI
+│       ├── ui_fail.wav               # Fallo de UI
+│       └── headstart_start.wav       # Inicio de partida
 └── js/
-    ├── config.js           # Variables globales, constantes de físicas y URL del modelo
-    ├── ml5-handler.js      # Conexión con cámara, carga del modelo de IA y lógica asíncrona de ML5
-    ├── entities/           # Clases OOP que definen los componentes del mundo físico
-    │   ├── Player.js         # Lógica, estado, gravedad y render del Jugador
-    │   ├── Obstacle.js       # Zappers y Misiles (obstáculos enemigos)
-    │   ├── Coin.js           # Monedas recolectables y su animación 3D
-    │   └── Particle.js       # Efecto visual de partículas (humo del jetpack)
-    ├── physics.js          # Lógica pura de detección de colisiones (Cajas/AABB y Circulares)
-    ├── rendering.js        # Funciones de dibujo puro: HUD, fondo Parallax, y pantallas UI (GameOver)
-    └── game.js             # "Game Loop" principal (Setup y Draw de p5.js) y orquestación
+    ├── config.js             # Constantes físicas, URL del modelo, variables globales
+    ├── sound.js              # SoundManager — carga y reproducción de audio
+    ├── ml5-handler.js        # Cámara + modelo Teachable Machine (inferencia async)
+    ├── sprites.js            # Carga y recorte de spritesheets
+    ├── physics.js            # Colisiones AABB (cajas) y circulares
+    ├── rendering.js          # Dibujo: parallax, HUD, pantallas de UI
+    ├── game.js               # Game loop principal (setup/draw de p5.js)
+    └── entities/
+        ├── Player.js         # Jugador: física, animación, jetpack
+        ├── Obstacle.js       # Obstáculos: Zapper y Misil
+        ├── Coin.js           # Monedas recolectables
+        └── Particle.js       # Partículas de humo del jetpack
 ```
 
-Esta separación ayuda a que, si necesitas modificar las físicas, solo vayas a `physics.js` o `Player.js`. Si necesitas mejorar los dibujos del fondo, vas a `rendering.js`.
+### Responsabilidades por módulo
+
+| Archivo | Qué hace |
+|---------|----------|
+| `config.js` | Define todas las constantes del juego (gravedad, velocidad, dimensiones) y el estado global compartido entre módulos |
+| `sound.js` | Carga todos los `.wav` con `new Audio()` y expone funciones específicas por evento (jetpack, moneda, game over, etc.) |
+| `ml5-handler.js` | Activa la cámara, carga el modelo de Teachable Machine y actualiza `etiquetaActual` y `confianzaActual` cada ~80ms |
+| `sprites.js` | Parsea y recorta los spritesheets para las animaciones del jugador y obstáculos |
+| `physics.js` | Funciones puras de detección de colisiones, sin estado ni efectos secundarios |
+| `rendering.js` | Todas las llamadas de dibujo a p5.js: fondo parallax, HUD, pantalla de Game Over |
+| `game.js` | Orquesta todo: `setup()` inicial, `draw()` a 60fps, spawn de entidades, entrada de teclado |
+| `entities/` | Clases OOP autocontenidas con `update()` (física) y `show()` (render) |
 
 ---
 
-## 🔄 Flujo de Datos del Juego
+## 🔄 Flujo de datos
 
-El juego funciona con dos grandes ciclos que ocurren al mismo tiempo en paralelo (asincronía):
+Dos ciclos corren en paralelo:
 
-### 1. El Loop de Predicción (La IA)
-Ocurre en `ml5-handler.js`. Toma un fotograma/imagen de la cámara web, se lo pasa al clasificador de Teachable Machine y éste escupe una predicción. Por ejemplo: `"Mano Abierta" con un 95% de confianza`. En cuanto termina, analiza el siguiente fotograma, y actualiza variables globales de estado (`etiquetaActual` y `confianzaActual`).
-
-### 2. El Game Loop (Los Gráficos y Físicas)
-Ocurre en `game.js` gracias a la función `draw()` de p5.js. Corre a 60 cuadros por segundo:
-1. **Entrada de Usuario:** `game.js` lee la última predicción dejada por el paso anterior (`etiquetaActual`). Si dice "Mano Abierta" con un buen margen de confianza, llama al método `jugador.volar()`.
-2. **Actualización (Posiciones y Estado):** Actualiza posiciones de enemigos asumiendo el movimiento del parallax. Actualiza al jugador basándose en gravedad estándar restando el empuje extra del jetpack. Revisa la distancia entre entidades utilizando `physics.js` para encontrar colisiones (perder o sumar puntos).
-3. **Renderizado (Dibujo):** Llama a todos los métodos `show()` de las entidades y llama a las funciones en `rendering.js` para dibujar el fondo, marcadores y elementos UI.
+```
+┌─── Loop de IA (ml5-handler.js) ───────────────────────┐
+│  Cámara → modelo → etiquetaActual / confianzaActual    │
+│  Frecuencia: ~12.5 veces/seg (cada 80ms)               │
+└────────────────────────────────────────────────────────┘
+                          ↓ lee variables globales
+┌─── Game Loop (game.js / p5.js draw()) ────────────────┐
+│  1. Lee predicción → llama jugador.volar() si "palma"  │
+│  2. Actualiza física de todas las entidades            │
+│  3. Detecta colisiones (physics.js)                    │
+│  4. Dibuja todo en el canvas (rendering.js + show())   │
+│  Frecuencia: ~60 veces/seg                             │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🤖 Cómo conectar tu propio modelo de Teachable Machine
+## 🤖 Conectar tu propio modelo de Teachable Machine
 
-El juego necesita diferenciar, como mínimo, dos estados para funcionar correctamente: **Mano Abierta** y otra pose (como **Mano Cerrada** o Fondo vacío).
-
-Para integrar tu propio modelo, sigue estos pasos:
-
-1. Ingresa a [Teachable Machine](https://teachablemachine.withgoogle.com/) y crea un proyecto de tipo **Imagen (Image Project)**.
-2. Crea una clase llamada exactamente `"Abierta"` (es extremadamente importante respetar la mayúscula y ortografía, pues el código busca esta palabra exacta).
-3. Entrena la clase `"Abierta"` capturando muchas fotos de tu mano haciendo esa seña frente a la cámara (recomendable usar fondos y luces distintas).
-4. Crea otra clase, puede llamarse `"Cerrada"`, `"Nada"`, o `"Fondo"`, y entrena esta pose, donde no intentes volar.
-5. Inicia el entrenamiento (con la configuración por defecto suele ser suficiente).
-6. Haz clic en **Export Model (Exportar Modelo)**, elige formato para la web (`Tensorflow.js`) y luego haz clic en el botón de **"Upload" ("Subir a la Nube")**.
-7. Teachable Machine te generará un **enlace URL público** al finalizar (ej. `https://teachablemachine.withgoogle.com/models/abc12345/`).
-
-**¡Instálalo en el código!**
-Abre el archivo `js/config.js` de nuestro directorio, encuentra el siguiente bloque al inicio del archivo:
+1. Entrá a [teachablemachine.withgoogle.com](https://teachablemachine.withgoogle.com/) y creá un proyecto **Image Project**.
+2. Creá una clase llamada exactamente **`palma`** (en minúsculas — el código busca esta palabra exacta).
+3. Entrená esa clase con fotos de tu mano abierta frente a la cámara (variá fondos e iluminación para mayor robustez).
+4. Creá otra clase (`cerrada`, `fondo`, o similar) para el estado de reposo.
+5. Entrenás el modelo y lo exportás: **Export Model → TensorFlow.js → Upload**.
+6. Copiás la URL generada (ej. `https://teachablemachine.withgoogle.com/models/XYZ/`).
+7. En `js/config.js`, reemplazás la URL:
 
 ```javascript
-// ============================================================
-//  CONFIGURACIÓN DEL MODELO DE TEACHABLE MACHINE
-// ============================================================
-let imageModelURL = 'TU_LINK_AQUI/';
+let imageModelURL = 'https://teachablemachine.withgoogle.com/models/TU_ID/';
 ```
 
-Simplemente reemplaza `'TU_LINK_AQUI/'` por tu URL generada, cuidando que **quede entre las comillas simples** y asegurándote de **que siempre termine en barra cruzada `/`**.
+> ⚠️ La URL **debe terminar en `/`** para que ml5.js encuentre los archivos `model.json`, `metadata.json` y `weights.bin`.
 
-¡Abre `index.html` en tu navegador, da permiso a tu cámara y comienza a jugar con tu propia inteligencia artificial!
+---
+
+## 🛠️ Tecnologías utilizadas
+
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| [p5.js](https://p5js.org/) | 1.9.4 | Motor de render y game loop |
+| [ml5.js](https://ml5js.org/) | 0.12.2 | Clasificador de imágenes con Teachable Machine |
+| HTML5 Audio API | — | Efectos de sonido y música |
+| Vanilla JavaScript | ES6+ | Toda la lógica del juego |
