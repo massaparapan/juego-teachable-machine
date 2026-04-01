@@ -15,6 +15,7 @@ function iniciarJuego() {
   document.getElementById('instrucciones').classList.add('oculto');
   SoundManager.uiSelect();
   SoundManager.inicioPartida();
+  SoundManager.bgPlay();
   juegoIniciado = true;
 }
 
@@ -161,12 +162,14 @@ function actualizarJuego() {
 // ============================================================
 function activarGameOver() {
   estado = 'gameOver';
+  SoundManager.bgStop();
   SoundManager.jugadorHerido();
 }
 
 function reiniciar() {
   SoundManager.resetJetpack();
   SoundManager.uiSelect();
+  SoundManager.bgPlay();
   puntaje = 0;
   obstaculos = [];
   monedas = [];

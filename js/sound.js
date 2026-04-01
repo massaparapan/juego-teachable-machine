@@ -8,6 +8,7 @@ const SoundManager = (() => {
   const _cache = {};
 
   let _jetpackOn   = false;
+  let _bgMusic     = null;
   let _loopNode    = null;
 
   // ── Crea y cachea un elemento <audio> ─────────────────────
@@ -35,7 +36,23 @@ const SoundManager = (() => {
       'jetpack_plain_start.wav', 'jetpack_plain_lp.wav', 'jetpack_plain_stop.wav',
       'laser_warning.wav', 'missile_warning.wav',
       'player_hurt_1.wav', 'ui_select.wav', 'ui_fail.wav', 'headstart_start.wav',
+      'music_background.wav',
     ].forEach(_crear);
+  }
+
+  function bgPlay() {
+    if (_bgMusic) return; // ya está corriendo
+    _bgMusic = _cache['music_background.wav'].cloneNode();
+    _bgMusic.loop   = true;
+    _bgMusic.volume = 0.3;
+    _bgMusic.play().catch(() => {});
+  }
+
+  function bgStop() {
+    if (!_bgMusic) return;
+    _bgMusic.pause();
+    _bgMusic.currentTime = 0;
+    _bgMusic = null;
   }
 
   // ── API pública ───────────────────────────────────────────
@@ -86,7 +103,7 @@ const SoundManager = (() => {
   function inicioPartida() { _play('headstart_start.wav', 0.65); }
 
   return {
-    init, monedaRecogida,
+    init, bgPlay, bgStop, monedaRecogida,
     jetpackInicio, jetpackParada, resetJetpack,
     avisoMisil, avisoLaser,
     jugadorHerido, uiSelect, inicioPartida,
