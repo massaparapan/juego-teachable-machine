@@ -3,6 +3,11 @@
 //  Este archivo orquesta todo el juego usando p5.js.
 // ============================================================
 
+// ── PRELOAD – carga de assets antes del primer frame ────────
+function preload() {
+  cargarSprites(); // carga coins.png y obstacles.png (sprites.js)
+}
+
 // ── FUNCIÓN PÚBLICA – llamada por el botón HTML ─────────────
 function iniciarJuego() {
   document.getElementById('instrucciones').classList.add('oculto');
