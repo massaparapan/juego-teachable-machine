@@ -11,20 +11,9 @@ Esquivá obstáculos, recolectá monedas y sobreviví el mayor tiempo posible.
 
 ## 🚀 Cómo ejecutar el juego
 
-### Opción A — Abrir directamente (más sencillo)
-1. Cloná o descargá este repositorio.
-2. Abrí el archivo `index.html` directamente en tu navegador (doble clic).
-3. Otorgá permiso de cámara cuando el navegador lo solicite.
-4. Presioná **▶ INICIAR JUEGO**.
+Ejecutar usando la extensión liveServer de vscode
 
 > **Nota:** El juego requiere conexión a internet para cargar las librerías externas (p5.js y ml5.js) desde CDN.
-
-### Opción B — Servidor local (recomendado para desarrollo)
-```bash
-# Python 3
-python3 -m http.server 8080
-# Luego abrí http://localhost:8080 en el navegador
-```
 
 ---
 
