@@ -18,6 +18,9 @@ function iniciarJuego() {
 //  SETUP – se ejecuta UNA VEZ al cargar la página
 // ============================================================
 function setup() {
+  // En pantallas HiDPI (retina) evita renderizar a 2x/3x resolución real.
+  pixelDensity(1);
+
   let canvas = createCanvas(ANCHO, ALTO);
   canvas.parent(document.body);
 

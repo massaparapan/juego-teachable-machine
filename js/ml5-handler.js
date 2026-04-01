@@ -9,6 +9,7 @@ let clasificador;                // el modelo de Teachable Machine
 let etiquetaActual  = 'Esperando...';
 let confianzaActual = 0;
 let modeloCargado   = false;
+let ultimoTickClasificacion = 0;
 
 // ============================================================
 //  CARGAR MODELO
@@ -37,9 +38,18 @@ function cargarModelo() {
 //  un array de resultados: [{ label, confidence }, ...]
 // ============================================================
 function clasificar() {
-  let flipped = ml5.flipImage(captura);
-  clasificador.classify(flipped, (error, resultados) => {
-    flipped.remove(); // Evita fugas de memoria
+  if (!clasificador || !captura) return;
+
+  // Reducimos inferencias/segundo para liberar CPU y estabilizar FPS del juego.
+  const ahora = performance.now();
+  const espera = Math.max(0, INTERVALO_CLASIFICACION_MS - (ahora - ultimoTickClasificacion));
+
+  setTimeout(() => {
+    ultimoTickClasificacion = performance.now();
+
+    // Evitamos flipImage por inferencia para no crear imágenes temporales continuamente.
+    // El espejo visual se mantiene en rendering.js al dibujar la cámara.
+    clasificador.classify(captura, (error, resultados) => {
     if (error) {
       console.warn('Error de clasificación:', error);
     } else {
@@ -50,4 +60,5 @@ function clasificar() {
     // Volvemos a clasificar → loop continuo de predicciones
     clasificar();
   });
+  }, espera);
 }

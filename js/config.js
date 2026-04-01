@@ -40,6 +40,9 @@ const TECHO = 40;
 const INTERVALO_OBSTACULO = 90;
 const INTERVALO_MONEDA = 60;
 
+// Frecuencia de inferencia del modelo (ms). 80ms ~= 12.5 inferencias/seg.
+const INTERVALO_CLASIFICACION_MS = 80;
+
 // ============================================================
 //  VARIABLES DE ESTADO GLOBALES
 //  Se comparten entre módulos vía el scope global (window)
