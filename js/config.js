@@ -4,7 +4,7 @@
 //  false → Teachable Machine (comportamiento normal de juego).
 //  ➡  Cambia solo esta línea para alternar entre modos.
 // ============================================================
-const MODO_PRUEBA = true;
+const MODO_PRUEBA = false;
 
 // Indica si el jugador mantiene Espacio presionado (solo en modo prueba)
 let teclaPulsada = false;
@@ -16,7 +16,7 @@ let teclaPulsada = false;
 //     El link debe terminar en "/" y apuntar a la carpeta
 //     que contiene model.json, metadata.json y weights.bin
 // ============================================================
-let imageModelURL = 'TU_LINK_AQUI/';
+let imageModelURL = 'https://teachablemachine.withgoogle.com/models/dMpX9K8KB/';
 
 // ============================================================
 //  CONSTANTES DEL JUEGO

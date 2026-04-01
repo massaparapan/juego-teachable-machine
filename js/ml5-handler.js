@@ -37,7 +37,9 @@ function cargarModelo() {
 //  un array de resultados: [{ label, confidence }, ...]
 // ============================================================
 function clasificar() {
-  clasificador.classify(captura, (error, resultados) => {
+  let flipped = ml5.flipImage(captura);
+  clasificador.classify(flipped, (error, resultados) => {
+    flipped.remove(); // Evita fugas de memoria
     if (error) {
       console.warn('Error de clasificación:', error);
     } else {

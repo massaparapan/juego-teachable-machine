@@ -80,7 +80,7 @@ function actualizarJuego() {
   if (MODO_PRUEBA) {
     if (teclaPulsada) jugador.volar(); // volar mientras Espacio esté presionado
   } else if (modeloCargado && confianzaActual > 0.6) {
-    if (etiquetaActual === 'Abierta') jugador.volar();
+    if (etiquetaActual === 'palma') jugador.volar();
     // 'Cerrada' o cualquier otra → cae por gravedad
   }
 
