@@ -9,10 +9,74 @@
 // Capas más lejanas → más lentas y oscuras.
 // ─────────────────────────────────────────────────────────────
 
+let imgBgFar = null;
+let imgBgNearUp = null;
+let imgBgNearFloor = null;
+let fondosParallaxListos = false;
+
+let _bgOffsetFar = 0;
+let _bgOffsetNearUp = 0;
+let _bgOffsetNearFloor = 0;
+
+function cargarFondosParallax() {
+  imgBgFar = loadImage('assets/bg_far.png');
+  imgBgNearUp = loadImage('assets/bg_near_up.png');
+  imgBgNearFloor = loadImage('assets/bg_near_floor.png');
+}
+
+function _fondosValidos() {
+  return (
+    imgBgFar && imgBgFar.width > 0 &&
+    imgBgNearUp && imgBgNearUp.width > 0 &&
+    imgBgNearFloor && imgBgNearFloor.width > 0
+  );
+}
+
+function _dibujarCapaTileHorizontal(img, offsetX) {
+  const escala = ALTO / img.height;
+  const dw = img.width * escala;
+  const dh = ALTO;
+
+  // Evita overflow numérico tras largas sesiones.
+  if (offsetX <= -dw) offsetX += dw;
+  if (offsetX > 0) offsetX -= dw;
+
+  imageMode(CORNER);
+  image(img, offsetX, 0, dw, dh);
+  image(img, offsetX + dw, 0, dw, dh);
+
+  return offsetX;
+}
+
+function _dibujarCapaTileHorizontalEnY(img, offsetX, y, hObjetivo) {
+  const escala = hObjetivo / img.height;
+  const dw = img.width * escala;
+  const dh = hObjetivo;
+
+  if (offsetX <= -dw) offsetX += dw;
+  if (offsetX > 0) offsetX -= dw;
+
+  imageMode(CORNER);
+  image(img, offsetX, y, dw, dh);
+  image(img, offsetX + dw, y, dw, dh);
+
+  return offsetX;
+}
+
 /**
  * Inicializa las 3 capas del parallax con objetos de fondo.
  */
 function inicializarParallax() {
+  fondosParallaxListos = _fondosValidos();
+  _bgOffsetFar = 0;
+  _bgOffsetNearUp = 0;
+  _bgOffsetNearFloor = 0;
+
+  if (fondosParallaxListos) {
+    capas = [];
+    return;
+  }
+
   capas = [
     // Capa 0 – lejana (estrellas/puntos)
     { velocidad: 0.3, objetos: crearObjetosBack(40, 2, 4,  [20, 20, 60]) },
@@ -48,6 +112,36 @@ function crearObjetosBack(cantidad, minH, maxH, col) {
  * Dibuja y mueve todas las capas del parallax.
  */
 function dibujarParallax() {
+  if (_fondosValidos()) {
+    fondosParallaxListos = true;
+
+    // Velocidades calibradas para que se sienta "runner" estilo Jetpack.
+    _bgOffsetFar -= VEL_MUNDO * 0.22;
+    _bgOffsetNearUp -= VEL_MUNDO * 0.62;
+    _bgOffsetNearFloor -= VEL_MUNDO * 0.9;
+
+    _bgOffsetFar = _dibujarCapaTileHorizontal(imgBgFar, _bgOffsetFar);
+
+    // Franja superior e inferior recortadas para reforzar techo/suelo.
+    const hUp = ALTO * (imgBgNearUp.height / imgBgFar.height);
+    const hFloor = ALTO * (imgBgNearFloor.height / imgBgFar.height);
+
+    _bgOffsetNearUp = _dibujarCapaTileHorizontalEnY(
+      imgBgNearUp,
+      _bgOffsetNearUp,
+      0,
+      hUp
+    );
+
+    _bgOffsetNearFloor = _dibujarCapaTileHorizontalEnY(
+      imgBgNearFloor,
+      _bgOffsetNearFloor,
+      ALTO - hFloor,
+      hFloor
+    );
+    return;
+  }
+
   for (let capa of capas) {
     for (let obj of capa.objetos) {
       obj.x -= capa.velocidad;
@@ -68,6 +162,16 @@ function dibujarParallax() {
 // ── AMBIENTE (suelo, techo, líneas neón) ────────────────────
 
 function dibujarAmbiente() {
+  if (fondosParallaxListos) {
+    // Con fondos ilustrados, solo marcamos límites suaves para lectura visual.
+    stroke(120, 190, 255, 45);
+    strokeWeight(1);
+    line(0, SUELO, ANCHO, SUELO);
+    line(0, TECHO, ANCHO, TECHO);
+    noStroke();
+    return;
+  }
+
   // Suelo
   fill(20, 40, 80);
   noStroke();

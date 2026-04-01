@@ -5,6 +5,7 @@
 
 // ── PRELOAD – carga de assets antes del primer frame ────────
 function preload() {
+  cargarFondosParallax();
   cargarSprites(); // carga coins.png y obstacles.png (sprites.js)
 }
 
