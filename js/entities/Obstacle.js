@@ -28,9 +28,11 @@ class Obstacle {
 
     this.vel       = VEL_MUNDO + random(0, 1.5);
     this.animFrame = 0;
-
-    // Frame inicial aleatorio (para variar el look al spawnear)
     this._frameBase = floor(random(ZAPPER_TOTAL_FRAMES));
+
+    // Aviso de sonido al spawnear
+    if (this.tipo === 0) SoundManager.avisoLaser();
+    else                 SoundManager.avisoMisil();
   }
 
   // ── Movimiento ──────────────────────────────────────────

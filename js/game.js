@@ -7,11 +7,14 @@
 function preload() {
   cargarFondosParallax();
   cargarSprites(); // carga coins.png y obstacles.png (sprites.js)
+  SoundManager.init();
 }
 
 // ── FUNCIÓN PÚBLICA – llamada por el botón HTML ─────────────
 function iniciarJuego() {
   document.getElementById('instrucciones').classList.add('oculto');
+  SoundManager.uiSelect();
+  SoundManager.inicioPartida();
   juegoIniciado = true;
 }
 
@@ -86,12 +89,13 @@ function draw() {
 function actualizarJuego() {
 
   // ── Control de vuelo (modo prueba ↔ Teachable Machine) ──
+  let _volando = false;
   if (MODO_PRUEBA) {
-    if (teclaPulsada) jugador.volar(); // volar mientras Espacio esté presionado
+    if (teclaPulsada) { jugador.volar(); _volando = true; }
   } else if (modeloCargado && confianzaActual > 0.6) {
-    if (etiquetaActual === 'palma') jugador.volar();
-    // 'Cerrada' o cualquier otra → cae por gravedad
+    if (etiquetaActual === 'palma') { jugador.volar(); _volando = true; }
   }
+  if (_volando) SoundManager.jetpackInicio(); else SoundManager.jetpackParada();
 
   // ── Spawn de obstáculos ──────────────────────────────────
   if (frameCount % INTERVALO_OBSTACULO === 0) {
@@ -137,6 +141,7 @@ function actualizarJuego() {
     if (colisionCircular(jugador, monedas[i])) {
       puntaje += 10;
       monedas.splice(i, 1);
+      SoundManager.monedaRecogida();
       continue;
     }
 
@@ -156,9 +161,12 @@ function actualizarJuego() {
 // ============================================================
 function activarGameOver() {
   estado = 'gameOver';
+  SoundManager.jugadorHerido();
 }
 
 function reiniciar() {
+  SoundManager.resetJetpack();
+  SoundManager.uiSelect();
   puntaje = 0;
   obstaculos = [];
   monedas = [];
