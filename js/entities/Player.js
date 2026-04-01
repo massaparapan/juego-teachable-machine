@@ -1,141 +1,143 @@
 // ============================================================
 //  CLASE: Player (El jugador)
-//  Controla la posición, física y renderizado del personaje.
+//  Controla posición, física y renderizado del personaje.
+//  Usa fly.png y walking.png para animar el sprite.
+//  Fallback: formas geométricas si los sprites no están listos.
 // ============================================================
 class Player {
   /**
-   * @param {number} x - posición X fija (a la izquierda)
-   * @param {number} y - posición Y inicial (centro vertical)
+   * @param {number} x - posición X fija (izquierda del hitbox)
+   * @param {number} y - posición Y inicial (borde superior del hitbox)
    */
   constructor(x, y) {
+    // Hitbox (usado por colisiones en physics.js)
     this.x  = x;
     this.y  = y;
-    this.w  = 40; // ancho del sprite
-    this.h  = 50; // alto del sprite
-    this.vy = 0;  // velocidad vertical (positivo = baja, negativo = sube)
-    this.volando = false; // ¿jetpack activo?
-    this.animFrame = 0;   // frame de animación actual
+    this.w  = 40;
+    this.h  = 55;
+
+    this.vy      = 0;       // velocidad vertical
+    this.volando = false;   // ¿jetpack activo este frame?
+
+    // ── Animación ─────────────────────────────────────────
+    this._tick     = 0;     // contador global de frames
+    this._seqIdx   = 0;     // índice dentro de la secuencia actual
+    this._ANIM_SPD = 8;     // ticks por frame de animación
+
+    // Secuencia ping-pong: 0→1→2→3→2→1→0→...
+    this._seq = [0, 1, 2, 3, 2, 1];
+
+    // Tamaños visuales fijos (evitan jitter entre frames con recortes distintos)
+    this._walkW = 58;
+    this._walkH = 66;
+    this._flyW  = 60;
+    this._flyH  = 64;
+
+    // Ajuste fino de contacto con suelo (positivo = más abajo)
+    this._ajustePieSuelo = 1;
   }
 
-  // ──────────────────────────────────────────────────────────
-  //  VOLAR
-  //  Activa el jetpack. Se llama cada frame que la mano está "Abierta".
-  //
-  //  Física:  vy = vy - FUERZA_JETPACK
-  //  Acumulamos fuerza hacia arriba (vy negativa) contra la gravedad.
-  // ──────────────────────────────────────────────────────────
+  // ── Activar jetpack ──────────────────────────────────────
   volar() {
     this.vy -= FUERZA_JETPACK;
     this.volando = true;
     this.emitirParticulas();
   }
 
-  // ──────────────────────────────────────────────────────────
-  //  UPDATE
-  //  Aplica física cada frame (integración de Euler):
-  //    1. vy += GRAVEDAD       (aceleración → velocidad)
-  //    2. vy = constrain(...)  (limitar velocidad terminal)
-  //    3. y  += vy             (velocidad  → posición)
-  //    4. Colisión con suelo y techo
-  // ──────────────────────────────────────────────────────────
+  // ── Física + animación por frame ─────────────────────────
   update() {
+    // Física
     this.vy += GRAVEDAD;
-    this.vy = constrain(this.vy, -VEL_MAXIMA, VEL_MAXIMA);
-    this.y += this.vy;
+    this.vy  = constrain(this.vy, -VEL_MAXIMA, VEL_MAXIMA);
+    this.y  += this.vy;
 
-    // Colisión con el suelo
-    if (this.y + this.h >= SUELO) {
-      this.y  = SUELO - this.h;
-      this.vy = 0;
+    // Límites verticales
+    if (this.y + this.h >= SUELO) { this.y = SUELO - this.h; this.vy = 0; }
+    if (this.y <= TECHO)          { this.y = TECHO;           this.vy = 0; }
+
+    // Avanzar frame de animación
+    this._tick++;
+    if (this._tick >= this._ANIM_SPD) {
+      this._tick   = 0;
+      this._seqIdx = (this._seqIdx + 1) % this._seq.length;
     }
 
-    // Colisión con el techo
-    if (this.y <= TECHO) {
-      this.y  = TECHO;
-      this.vy = 0;
-    }
-
-    // Resetear flag de vuelo (se activa de nuevo si volar() es llamado)
+    // Resetear flag (se vuelve a poner en true si volar() es llamado)
     this.volando = false;
-
-    // Animar el sprite
-    this.animFrame = (this.animFrame + 1) % 60;
   }
 
-  // ──────────────────────────────────────────────────────────
-  //  SHOW
-  //  Dibuja el jugador con formas primitivas de p5.js.
-  //
-  //  TODO: Reemplazar con image(spriteJugador, ...) cuando
-  //        tengamos el spritesheet final.
-  // ──────────────────────────────────────────────────────────
+  // ── Renderizado ──────────────────────────────────────────
   show() {
     let cx = this.x + this.w / 2;
     let cy = this.y + this.h / 2;
+    let pieY = this.y + this.h;
+    let frame = this._seq[this._seqIdx];
 
-    // Efecto de brillo (glow)
+    // Elegir entre sprite de vuelo o caminata
+    // "volando" ya fue reseteado en update(), así que usamos la velocidad:
+    // vy < -0.5 → subiendo (jetpack) | vy > 1 → cayendo | cerca del suelo → caminando
+    let enSuelo = (this.y + this.h >= SUELO - 4);
+
+    let dibujado = false;
+    if (!enSuelo) {
+      dibujado = dibujarFrameFlyAnclado(frame, cx, pieY, this._flyW, this._flyH);
+    } else {
+      dibujado = dibujarFrameWalkAnclado(
+        frame,
+        cx,
+        pieY + this._ajustePieSuelo,
+        this._walkW,
+        this._walkH
+      );
+    }
+
+    // Fallback a primitivas si el sprite no cargó
+    if (!dibujado) {
+      this._dibujarPrimitivo(cx, cy);
+    }
+  }
+
+  // ── Partículas del jetpack ────────────────────────────────
+  emitirParticulas() {
+    // Posición del escape del jetpack (detrás y debajo del jugador)
+    for (let i = 0; i < 3; i++) {
+      particulas.push(new Particula(this.x + 5, this.y + this.h - 10));
+    }
+  }
+
+  // ── Fallback primitivo (diseño original) ─────────────────
+  _dibujarPrimitivo(cx, cy) {
     noStroke();
     fill(0, 200, 255, 20);
     ellipse(cx, cy, this.w + 30, this.h + 30);
-    fill(0, 200, 255, 15);
-    ellipse(cx, cy, this.w + 50, this.h + 50);
 
-    // Cuerpo principal (traje de vuelo)
     fill(0, 180, 255);
     stroke(0, 230, 255);
     strokeWeight(2);
     rect(this.x + 4, this.y + 5, this.w - 8, this.h - 10, 8);
 
-    // Cabeza
     fill(0, 220, 255);
     stroke(0, 255, 255);
     strokeWeight(1);
     ellipse(cx - 2, this.y + 4, 26, 26);
 
-    // Visor del casco
     fill(255, 200, 50, 200);
     noStroke();
     ellipse(cx - 2, this.y + 2, 14, 10);
 
-    // Jetpack (caja detrás del personaje)
     fill(80, 80, 120);
     stroke(120, 120, 200);
     strokeWeight(1);
     rect(this.x - 14, this.y + 10, 18, 30, 4);
 
-    // Llamas del jetpack (si está volando)
-    if (this.volando || this.animFrame % 10 < 5) {
+    if (this.vy < 0) {
       noStroke();
-      // Llama naranja
       fill(255, 120, 0, 200);
       triangle(
         this.x - 16, this.y + 35,
         this.x - 5,  this.y + 35,
         this.x - 10, this.y + 35 + random(8, 20)
       );
-      // Núcleo amarillo
-      fill(255, 240, 0, 180);
-      triangle(
-        this.x - 14, this.y + 35,
-        this.x - 8,  this.y + 35,
-        this.x - 11, this.y + 35 + random(4, 12)
-      );
-    }
-
-    // Botas
-    fill(0, 100, 180);
-    noStroke();
-    rect(this.x + 6,  this.y + this.h - 8, 10, 8, 3);
-    rect(this.x + 20, this.y + this.h - 8, 10, 8, 3);
-  }
-
-  // ──────────────────────────────────────────────────────────
-  //  EMITIR PARTÍCULAS
-  //  Las partículas nacen en la posición del jetpack.
-  // ──────────────────────────────────────────────────────────
-  emitirParticulas() {
-    for (let i = 0; i < 3; i++) {
-      particulas.push(new Particula(this.x - 10, this.y + 35));
     }
   }
 }
